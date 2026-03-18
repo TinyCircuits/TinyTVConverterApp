@@ -6,8 +6,6 @@
 
 [Official Download Page](https://tinytv.us/TinyTV-Converter-App/)
 
-## Executing Python App
-
 ### Python Dependencies
 
 ```
@@ -23,6 +21,14 @@ psutil
 FFMPEG
 ```
 
-## Packaging with PyInstaller
+[MacOS FFMPEG binaries](https://evermeet.cx/ffmpeg/)
+
+[Windows FFMPEG binaries](https://www.gyan.dev/ffmpeg/builds/)
+
+## Running From Source
+
+- Install Python dependencies with `python3 -m pip install ...`
+- Place `ffmpeg(.exe)` into the top-level directory of the cloned repository.
+- Execute `python3 TinyTVConverter.py`
 
 ## App Instructions
