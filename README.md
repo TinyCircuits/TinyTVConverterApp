@@ -17,6 +17,12 @@ tkinterdnd2
 psutil
 ```
 
+### Other Dependencies
+
+```
+FFMPEG
+```
+
 ## Packaging with PyInstaller
 
 ## App Instructions
