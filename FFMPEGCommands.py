@@ -1,0 +1,55 @@
+def getAVIConvertCommand(bin, scaleCommand, bitRate, infile, outfile, outputFrameRate, outputSampleRate, volumeAdjust):
+    return [ bin,
+        '-i', infile,
+        '-r', '%d' % (outputFrameRate),
+        '-pix_fmt', 'yuv420p',
+        '-strict', 'unofficial',
+        '-vf', scaleCommand,
+        #'-vf', 'scale=428:142,hqdn3d,'
+        '-b:v', bitRate,
+        '-c:v', 'mjpeg',
+        '-ac', '1',
+        '-acodec', 'pcm_u8',
+        '-af', 'volume=%.1fdB,aresample=%d,aresample=async=1000,aresample=osf=u8,asetnsamples=n=210:p=0' % (volumeAdjust, outputSampleRate),
+        '-y',
+        outfile]
+
+def getMP4ConvertCommand(bin, scaleCommand, bitRate, infile, outfile, outputFrameRate, outputSampleRate, volumeAdjust):
+    return [bin,
+        '-i', infile,
+        '-r', '%d' % (outputFrameRate),
+        '-b:v', bitRate,
+        '-bf', '0',
+        '-pix_fmt', 'yuv420p',
+        '-profile:v', 'baseline',
+        '-vf', scaleCommand,
+        '-tune', 'fastdecode',
+        '-c:v', 'libx264',
+        '-x264-params', 'keyint=8:scenecut=0',
+        '-x264opts', 'ref=1',
+        '-color_primaries', 'bt709',
+        '-color_trc', 'bt709',
+        '-colorspace', 'bt709',
+        '-movflags', 'frag_keyframe+empty_moov+separate_moof',
+        '-frag_size', '8192',
+        '-acodec', 'flac',
+        '-compression_level', '0',
+        '-exact_rice_parameters', '0',
+        '-lpc_type', 'fixed',
+        '-lpc_coeff_precision', '1',
+        '-frame_size', '512',
+        '-write_tmcd', '0',
+        '-ac', '1',
+        '-af', 'volume=0.0dB,aresample=10000,aresample=async=1000,aresample=osf=u8,asetnsamples=n=512:p=0',
+        '-y',
+        outfile
+    ]
+
+def getPreviewFrameCommand(bin, previewTime, scaleCommand, infile):
+    return [bin,
+    '-ss', previewTime,
+    '-i', infile,
+    '-f', 'image2pipe',
+    '-vf', scaleCommand,
+    '-pix_fmt', 'rgb24',
+    '-vcodec', 'rawvideo', '-']
