@@ -1,3 +1,6 @@
+from tkinter import IntVar, DoubleVar, StringVar, BOTH, Text, Menu, END, X, W, E, NW, PhotoImage, Image, Canvas, Listbox, Toplevel, Grid, messagebox, simpledialog
+import sys
+
 class CreateToolTip(object):
     """
     create a tooltip for a given widget

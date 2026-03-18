@@ -42,6 +42,8 @@ from VideoOutputSettings import VideoOutputSettingsClass
 
 from Tooltip import CreateToolTip
 
+from FFMPEGCommands import getAVIConvertCommand, getMP4ConvertCommand, getPreviewFrameCommand
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -88,7 +90,6 @@ class TinyTVConverter(Frame):
         self.totalTime = 0
 
         #variables that change when video or options selected
-        print("Setting durationSeconds!")
         self.durationSeconds = 0.0
         self.inputVidFrameBytes = 0
         self.outputVidFrameBytes = 0
@@ -109,7 +110,6 @@ class TinyTVConverter(Frame):
         self.audioFrameBytes=self.VideoOutputSettings.tsvAudioSampleCountPerFrame*2
 
         self.totalFrames=self.durationSeconds*self.VideoOutputSettings.outputFrameRate
-        print("Setting output size!")
         print("Duration: "+str(self.durationSeconds))
         print(self.VideoOutputSettings.outputBytesPerSecond)
         self.outputSize=self.durationSeconds*self.VideoOutputSettings.outputBytesPerSecond
@@ -124,9 +124,6 @@ class TinyTVConverter(Frame):
         # retrieve the relative position on the
         # parent widget
         z = self.grid_location(x, y)
-
-        # printing position
-        #print(z)
 
     def showBatchDirectoryList(self):
         self.PreviewThumbnail.grid_forget()
@@ -266,10 +263,8 @@ class TinyTVConverter(Frame):
 
         Button(warn, text="Ok", command=warn.destroy).pack(side="left", padx=(15, 5), pady=(5, 15), anchor="sw")
         Button(warn, text="Open Video", command=lambda: [self.onOpen(), warn.destroy()]).pack(side="right", padx=(5, 15), pady=(5, 15), anchor="se")
-        #messagebox.showwarning('TinyTV Converter', 'No video selected!')
 
     def onThemeChanged(self, theme):
-        #print("Theme listener fired!!")
         sv_ttk.set_theme(theme.lower())
         canvasBG = 'white'
         if sys.platform=='darwin' :
@@ -294,7 +289,6 @@ class TinyTVConverter(Frame):
         if(self.currentTheme != darkdetect.theme()):
             self.onThemeChanged(darkdetect.theme())
             self.currentTheme = darkdetect.theme()
-        #print("darkdetect poll!")
         self.after(500, self.darkDetectPollLoop)
 
     def loadVideoThumbnailThreadDND(self):
@@ -325,7 +319,7 @@ class TinyTVConverter(Frame):
             def openPage():
                 webbrowser.open_new("https://tinytv.us/Update")
 
-            self.formatWarningLabel = Label(self, text="requires new firmware!", foreground="red")
+            self.formatWarningLabel = Label(self, text="Requires new firmware!", foreground="red")
             self.formatWarningLabel.grid(column=1,row=2,columnspan=1,sticky="sw", padx=10, pady=(56, 0))
             self.formatWarningLabel2 = Label(self, text="tinytv.us/Update", foreground="blue", cursor="hand2")
             self.formatWarningLabel2.bind("<Button-1>", lambda e: openPage())
@@ -342,7 +336,6 @@ class TinyTVConverter(Frame):
             self.OnOutputFormatChange(None)
         self.VideoOutputSettings.outputFormat.set(self.formatTypes[self.FormatCombo.get()])
         self.VideoOutputSettings.TVTypeOption.set(self.TVTypes[self.TVCombo.get()])
-        #self.initVideoData()
 
         self.VideoOutputSettings.calculateVideoData()
         self.reloadVideoSettings()
@@ -411,7 +404,6 @@ class TinyTVConverter(Frame):
         self.VideoOutputSettings.normalizeAudio.set(1)
 
         self.bind_all("<Control-o>", self.onOpen)
-        #self.bind_all("<Control-r>", self.onConvert)
         self.bind_all("<Control-q>", self.onQuit)
 
         self.parent.protocol("WM_DELETE_WINDOW", self.onWindowClose)
@@ -449,7 +441,6 @@ class TinyTVConverter(Frame):
                 self.thumbnailOpenButton.grid_forget()
 
                 self.loadVideoLabel = Label(self.PreviewFrame, text="Loading video...")
-                #loadVideoLabel.lift()
                 self.convertFileButton["text"] = "Convert Video"
 
                 self.progressBarVar.set(0)
@@ -458,14 +449,12 @@ class TinyTVConverter(Frame):
                 self.dndevent = event
                 loader = threading.Thread(target=self.loadVideoThumbnailThreadDND, args=())
                 loader.start()
-                #self.loadVideoThumbnailThread(event)
 
             elif extension == '':
                 if messagebox.askyesno(
                     title="Open Directory",
                     message="Open \'"+str(event.data)+ "\'?"
                 ):
-
                     self.batchDirectory.delete('1.0', tkinter.END)
                     self.batchDirectory.insert(tkinter.END, event.data[1:-1] if event.data[0] == '{' else event.data)
                     print("Set batch directory to "+str(self.batchDirectory.get('1.0', tkinter.END).strip()))
@@ -485,9 +474,6 @@ class TinyTVConverter(Frame):
         if os.name=='darwin':
             previewX=3
             previewY=2
-        #print(darkdetect.theme())
-
-        #sv_ttk.set_theme(darkdetect.theme())
 
         self.image = PhotoImage(file=(resource_path('splash_light.png') if darkdetect.theme() == 'Light' else resource_path('splash_dark.png')))
         self.PreviewThumbnail.create_image(previewX,previewY,image=self.image,anchor=NW)
@@ -503,11 +489,9 @@ class TinyTVConverter(Frame):
         self.openButtonsFrame = LabelFrame(self.openFileFrame, text = 'Open...')
 
         self.openFileButton = Button(self.openButtonsFrame, text='Open Video', command=self.onOpen)
-        # self.openFileButton.pack(fill='x', pady=(0,4))
         self.openFileButton.grid(row=0, column=0, sticky='w', padx=(4,0), pady=(5,4))
 
         self.openDirectoryButton = Button(self.openButtonsFrame, text='Open Directory', command=self.onOpenDirectory)
-        # self.openDirectoryButton.pack(fill='x')
         self.openDirectoryButton.grid(row=0, column=1,sticky='w', padx=(4,4), pady=(5,3))
 
         self.radioFrameTVType = LabelFrame(self.openFileFrame, text = 'TV Type')
@@ -600,15 +584,9 @@ class TinyTVConverter(Frame):
 
         self.TVConvertFrame = LabelFrame(self, text = 'Convert...')
 
-        # self.menuBarFrame = LabelFrame(self, text="Menu")
         self.menuBarFrame = Frame(self)
-        #self.menuBarFrame.grid(column=0, row=0, padx=(0, 0), sticky='w')
-
-        # self.testMenuBarButton = Button(self.menuBarFrame, text='Test', command=None)
-        # self.testMenuBarButton.grid(column=0, row=0)
         self.menuBarStyle = Style(self)
 
-        # Configure the TButton style
         self.menuBarStyle.configure("MenuBarButton.TButton", font=("Arial", 10), relief='flat', anchor="w", borderwidth=0, padding=0)
 
         self.FileMenuBarButton = Button(self.menuBarFrame, text='File', takefocus=0, width=5)
@@ -646,8 +624,6 @@ class TinyTVConverter(Frame):
         self.cancelButton = Button(self.TVConvertFrame, text='Cancel', width=8, command=self.onCancelConvert)
         self.cancelButton.pack(side='left', pady=(5,4), padx=(0,4))
 
-        # self.importExportFrame = LabelFrame(self, text = 'Import / Export Output Settings')
-
         self.openHelpButton = Button(self.TVConvertFrame, text='Help', width=4, style = "Accent.TButton", command=self.onOpenHelpFile)
         self.openHelpButton.pack(side='right', pady=(5,4), padx=(0,4))
 
@@ -655,10 +631,6 @@ class TinyTVConverter(Frame):
         self.exportSettingsButton.pack(side='right', pady=(5,4), padx=(0,4))
         self.importSettingsButton = Button(self.TVConvertFrame, text='Import Settings', width=12, command=self.onOpenFormatSettings)
         self.importSettingsButton.pack(side='right', pady=(5,4), padx=(0,4))
-        #self.importSettingsButton.pack(side='right')
-
-        #self.selectTTVButton = Button(self.TVConvertFrame, text='Select TinyTV', command=self.selectTTV)
-        #self.selectTTVButton.pack(fill='x', pady=(2,2), padx=(2,2))
 
         self.durationStringLabel = Label(self.videoInfoFrame, text="Video Length:")
         self.durationStringLabel.grid(column=1,row=0, sticky=W, padx=5, pady=(5, 0))
@@ -676,18 +648,13 @@ class TinyTVConverter(Frame):
 
         self.convertFormatFrame.grid(column=1,row=2,columnspan=1,sticky="new", padx=5, pady=0)
 
-        self.formatWarningLabel = Label(self, text="MP4 requires updated\nfirmware!", foreground="red")
+        self.formatWarningLabel = Label(self, text="Requires new firmware!", foreground="red")
         self.formatWarningLabel2 = Label(self, text="tinytv.us/Update", foreground="red")
-        #self.formatWarningLabel.grid(column=1,row=3,columnspan=1,sticky="new", padx=10, pady=0)
 
         self.checkboxFrameAudio.grid(column=1,row=3,columnspan=1,sticky="new", padx=5, pady=0)
         self.videoInfoFrame.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
 
-        #self.checkboxFrameAudio.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
-        #self.videoInfoFrame.grid(column=1,row=5,columnspan=1,sticky="new", padx=5, pady=0)
-
         self.TVConvertFrame.grid(column=0,row=9,columnspan=2,sticky="new", padx=5, pady=(0, 3))
-        #self.importExportFrame.grid(column=1,row=9,columnspan=1,sticky="nw", padx=5, pady=0)
 
         self.progressbar = Progressbar(self, variable=self.progressBarVar, maximum=100)
 
@@ -732,8 +699,6 @@ class TinyTVConverter(Frame):
         #https://forum.videohelp.com/threads/401057-padding-top-and-bottom-odd-number-ffmpeg
         return scaleCommand
 
-
-
     def displayPreviewFrame(self):
         if(self.durationSeconds>0):
             previewTime=self.durationSeconds/2
@@ -743,14 +708,7 @@ class TinyTVConverter(Frame):
             previewTime = '%02d:%02d:%02d' % (h, m, s)
 
             scaleCommand=self.getScaleCommand(self.VideoOutputSettings.outputWidth*2,self.VideoOutputSettings.outputHeight*2)
-
-            vidcommand = [ FFMPEG_BIN,
-            '-ss', previewTime,
-            '-i', self.inputFile,
-            '-f', 'image2pipe',
-            '-vf', scaleCommand,
-            '-pix_fmt', 'rgb24',
-            '-vcodec', 'rawvideo', '-']
+            vidcommand = getPreviewFrameCommand(FFMPEG_BIN, previewTime, scaleCommand, self.inputFile)
             infoPipe = '';
             if os.name=='nt' :
                 startupinfo = sp.STARTUPINFO()
@@ -778,9 +736,6 @@ class TinyTVConverter(Frame):
                 yOffset=yOffset/2
 
             self.PreviewThumbnail.create_image(xOffset,yOffset,image=self.image,anchor=NW)
-
-
-
 
     def displayVidData(self):
         self.VideoOutputSettings.calculateVideoData()
@@ -918,7 +873,6 @@ class TinyTVConverter(Frame):
         self.audioFrameBytes=self.VideoOutputSettings.tsvAudioSampleCountPerFrame*2
 
         self.totalFrames=self.durationSeconds*self.VideoOutputSettings.outputFrameRate
-        #self.ouputSize=self.totalFrames*(self.outputVidFrameBytes+self.audioFrameBytes)
         self.outputSize=self.durationSeconds*self.VideoOutputSettings.outputBytesPerSecond
 
     def onOpen(self):
@@ -940,28 +894,6 @@ class TinyTVConverter(Frame):
             self.loaderFilename = fileName
             loader = threading.Thread(target=self.loadVideoThumbnailThreadOpen, args=())
             loader.start()
-
-            #self.setVideoInfo(fileName)
-            #self.VideoOutputSettings.calculateVideoData()
-
-            #self.reloadVideoSettings()
-
-            #self.displayVidData()
-            '''
-            self.batchDirectory.delete('1.0', tkinter.END)
-
-            self.thumbnailOpenButton.grid_forget()
-
-
-            self.convertFileButton["text"] = "Convert Video"
-
-            self.progressBarVar.set(0)
-            self.loadVideoLabel.grid(row=1, column=0)
-
-            self.dndevent = event
-            loader = threading.Thread(target=self.loadVideoThumbnailThreadDND, args=())
-            loader.start()
-            '''
 
     def onOpenFormatSettings(self):
         dlg = tkinter.filedialog.Open(self, title="Open format settings")
@@ -1074,7 +1006,6 @@ class TinyTVConverter(Frame):
                 videoIndex = 0
                 for file in self.filesToConvert:
                     self.setVideoInfo(file)
-                    #self.inputFile = file
                     self.outputFile = outDir + '/' + os.path.basename(file)[:-4] + (".mp4" if self.VideoOutputSettings.outputFormat.get() == 3 else (".tsv" if self.VideoOutputSettings.outputFormat.get() == 2 else ".avi"))
                     print(self.outputFile)
                     print("Set output file to "+self.outputFile)
@@ -1082,7 +1013,6 @@ class TinyTVConverter(Frame):
                     if self.VideoOutputSettings.normalizeAudio.get() == 1 :
                         self.volumeAdjust = (0-self.runVolumeDetect(True)) * 0.95
                         self.audioBoostStringLabel.configure(text="%.1f dB" % (self.volumeAdjust))
-
 
                     if(self.VideoOutputSettings.outputFormat.get() == 1):
                         self.convertAVI(self.inputFile, self.outputFile, self.inputVidFrameBytes, self.outputVidFrameBytes, videoIndex, len(self.filesToConvert))
@@ -1125,8 +1055,6 @@ class TinyTVConverter(Frame):
             return
         if(os.path.splitext(saveNewVideoAs)[1] != extStr):
             messagebox.showwarning('TinyTV Converter', 'File extension should be ' + extStr + ', not ' + os.path.splitext(saveNewVideoAs)[1] + ', please retry!')
-        #print(self.outputFile)
-        #print(saveNewVideoAs)
         self.outputFile = saveNewVideoAs
 
         self.volumeAdjust = 0.0
@@ -1144,7 +1072,6 @@ class TinyTVConverter(Frame):
         convertThread.daemon=True
         convertThread.start()
 
-
     def runVolumeDetect(self,afterResample):
         if(len(self.inputFile)<5):
             return 0.0
@@ -1159,7 +1086,6 @@ class TinyTVConverter(Frame):
             '-f', 'null', '/dev/null'
             ]
 
-        #print(volumeDetectCommand)
         cmdPipe = '';
         if os.name=='nt' :
             startupinfo = sp.STARTUPINFO()
@@ -1186,36 +1112,7 @@ class TinyTVConverter(Frame):
         scaleCommand= self.getScaleCommand(208,128) if (self.VideoOutputSettings.TVTypeOption.get() == 3) else self.getScaleCommand(64,64)
 
         bitRate = '94208'
-
-        vidcommand = [ FFMPEG_BIN,
-            '-i', infile,
-            '-r', '%d' % (self.VideoOutputSettings.outputFrameRate),
-            '-b:v', bitRate,
-            '-bf', '0',
-            '-pix_fmt', 'yuv420p',
-            '-profile:v', 'baseline',
-            '-vf', scaleCommand,
-            '-tune', 'fastdecode',
-            '-c:v', 'libx264',
-            '-x264-params', 'keyint=8:scenecut=0',
-            '-x264opts', 'ref=1',
-            '-color_primaries', 'bt709',
-            '-color_trc', 'bt709',
-            '-colorspace', 'bt709',
-            '-movflags', 'frag_keyframe+empty_moov+separate_moof',
-            '-frag_size', '8192',
-            '-acodec', 'flac',
-            '-compression_level', '0',
-            '-exact_rice_parameters', '0',
-            '-lpc_type', 'fixed',
-            '-lpc_coeff_precision', '1',
-            '-frame_size', '512',
-            '-write_tmcd', '0',
-            '-ac', '1',
-            '-af', 'volume=0.0dB,aresample=10000,aresample=async=1000,aresample=osf=u8,asetnsamples=n=512:p=0',
-            '-y',
-            outfile
-        ]
+        vidcommand = getMP4ConvertCommand(FFMPEG_BIN, scaleCommand, bitRate, infile, outfile, self.VideoOutputSettings.outputFrameRate, self.VideoOutputSettings.outputAudioSampleRate, self.volumeAdjust)
 
         self.vidPipe = None;
         if os.name=='nt' :
@@ -1266,7 +1163,6 @@ class TinyTVConverter(Frame):
                 currentTime = float(finalTimeStringSplit[0])*60.0*60.0
                 currentTime += float(finalTimeStringSplit[1])*60.0
                 currentTime += float(finalTimeStringSplit[2])
-            # self.progressBarVar.set(100.0*(videoIndex)/numVideos + (0 if self.durationSeconds == 0 else 100.0*(currentTime/self.durationSeconds))/numVideos)
             self.progressBarVar.set(100.0*(self.accumTime)/self.totalTime + (0 if self.durationSeconds == 0 else 100.0*(currentTime/self.totalTime)))
             self.parent.update()
 
@@ -1278,23 +1174,8 @@ class TinyTVConverter(Frame):
         bitRate = "1500k"
         if(self.VideoOutputSettings.outputHeight <= 64):
             bitRate = "300k"
+        vidcommand = getAVIConvertCommand(FFMPEG_BIN, scaleCommand, bitRate, infile, outfile, self.VideoOutputSettings.outputFrameRate, self.VideoOutputSettings.outputAudioSampleRate, self.volumeAdjust)
 
-        vidcommand = [ FFMPEG_BIN,
-            '-i', infile,
-            '-r', '%d' % (self.VideoOutputSettings.outputFrameRate),
-            '-pix_fmt', 'yuv420p',
-            '-strict', 'unofficial',
-            '-vf', scaleCommand,
-            #'-vf', 'scale=428:142,hqdn3d,'
-            '-b:v', bitRate,
-            '-c:v', 'mjpeg',
-            '-ac', '1',
-            '-acodec', 'pcm_u8',
-            '-af', 'volume=%.1fdB,aresample=%d,aresample=async=1000,aresample=osf=u8,asetnsamples=n=210:p=0' % (self.volumeAdjust, self.VideoOutputSettings.outputAudioSampleRate),
-            '-y',
-            outfile]
-
-        #print(vidcommand)
         self.vidPipe = None;
         if os.name=='nt' :
             startupinfo = sp.STARTUPINFO()
@@ -1304,18 +1185,13 @@ class TinyTVConverter(Frame):
             self.vidPipe=sp.Popen(vidcommand, stdout = sp.PIPE, stderr=sp.STDOUT, universal_newlines=True)
 
         for line in self.vidPipe.stdout:
-            #print(line)
             self.updateProgressBarTime(line)
 
-
-
-        #vidErr = vidPipe.stderr.read()
         vidFrame = self.vidPipe.stdout.read()
         print(len(vidFrame))
         while len(vidFrame)==inVidFrameBytes:
             print(len(vidFrame))
             vidFrame = self.vidPipe.stdout.read(inVidFrameBytes)
-
 
         self.progressBarVar.set(100.0)
 
@@ -1333,7 +1209,6 @@ class TinyTVConverter(Frame):
 
         time.sleep(0.5)
         self.progressBarVar.set(0.0)
-        #self.conversionTimeField.config(text = '%d:%02d:%02d' % ( h, m, s))
 
     def convertTSV(self, infile, outfile, inVidFrameBytes, outVidFrameBytes, videoIndex, numVideos):
         timer=time.time()
@@ -1387,7 +1262,6 @@ class TinyTVConverter(Frame):
         while len(vidFrame)==inVidFrameBytes:
             currentFrame+=1
             if(currentFrame%30==0):
-                # self.progressBarVar.set(100.0*(videoIndex)/numVideos + 100.0*(currentFrame*1.0)/(self.totalFrames*numVideos))
                 self.progressBarVar.set(100.0*(self.accumTime)/self.totalTime + 100.0*self.durationSeconds*(currentFrame*1.0)/(self.totalFrames*self.totalTime))
                 self.parent.update()
             if (self.VideoOutputSettings.videoBitDepth.get() == 16):
