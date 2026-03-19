@@ -34,3 +34,5 @@ FFMPEG
 - Execute `python3 TinyTVConverter.py`
 
 ## App Instructions
+
+[Instruction Manual](instruction_manual.pdf)
