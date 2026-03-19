@@ -2,6 +2,8 @@
 
 ## Application Preview
 
+![TinyTVConverter App](windows_screenshot_dark.png "TinyTVConverter App")
+
 ## Packaged Binaries
 
 [Official Download Page](https://tinytv.us/TinyTV-Converter-App/)
