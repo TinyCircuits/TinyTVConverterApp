@@ -1,5 +1,6 @@
-from tkinter import IntVar, DoubleVar, StringVar, BOTH, Text, Menu, END, X, W, E, NW, PhotoImage, Image, Canvas, Listbox, Toplevel, Grid, messagebox, simpledialog
+from tkinter import IntVar, DoubleVar, StringVar, BOTH, Text, Label, Menu, END, X, W, E, NW, PhotoImage, Image, Canvas, Listbox, Toplevel, Grid, messagebox, simpledialog
 import sys
+import darkdetect
 
 class CreateToolTip(object):
     """
@@ -53,7 +54,7 @@ class CreateToolTip(object):
                        wraplength = self.wraplength)
             label.pack(padx=5, pady=5)
         else:
-            label = tkLabel(self.tw, text=' '+self.text+' ', justify='left',
+            label = Label(self.tw, text=' '+self.text+' ', justify='left',
                        background="#FFFFE1" if darkdetect.theme() == "Light" else "#3f3f3f", relief='solid', borderwidth=1,
                        wraplength = self.wraplength)
             label.pack(padx=0, pady=0)
