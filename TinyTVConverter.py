@@ -11,7 +11,7 @@
 #adjust bit rate calculation (DONE)
 #add version number
 
-
+#Add settings to UI
 
 import os
 import sys
@@ -25,7 +25,7 @@ import time
 from tkinter import IntVar, DoubleVar, StringVar, BOTH, Text, Menu, END, X, W, E, NW, PhotoImage, Image, Canvas, Listbox, Toplevel, Grid, messagebox, simpledialog
 from tkinter import Label as tkLabel
 import tkinter.filedialog
-from tkinter.ttk import Progressbar, Style, Button, Radiobutton, Checkbutton, Frame, Label, LabelFrame, Entry, Scrollbar, Combobox
+from tkinter.ttk import Progressbar, Style, Button, Radiobutton, Checkbutton, Frame, Label, LabelFrame, Entry, Scrollbar, Combobox, Notebook, Scale
 
 import threading
 
@@ -37,6 +37,7 @@ from tkinterdnd2 import Tk, DND_FILES
 
 import serial.tools.list_ports
 from common import SerIO
+from serial import SerialException
 
 from VideoOutputSettings import VideoOutputSettingsClass
 
@@ -98,6 +99,11 @@ class TinyTVConverter(Frame):
         self.volumeAdjust = 0.0
 
         self.loopVideoSetting = IntVar()
+        self.liveVideoSetting = IntVar()
+        self.alphabetizePlaybackSetting = IntVar()
+        self.showStaticSetting = IntVar()
+        self.showChannelNumberSetting = IntVar()
+        self.showVolumeSetting = IntVar()
         self.randomStartTimeSetting = IntVar()
         self.randomStartChannelSetting = IntVar()
 
@@ -138,8 +144,8 @@ class TinyTVConverter(Frame):
         self.PreviewThumbnail.grid(row=1, column=0)
 
     def serialWrite(self, command):
-        print(f"\n\rWriting serial command: \"{command}\"")
         if(self.ttvPort is not None):
+            print(f"\n\rWriting serial command: \"{command}\"")
             self.ttvPort.ser.write(command.encode('utf-8'))
             self.ttvPort.ser.flush()
         else:
@@ -147,22 +153,118 @@ class TinyTVConverter(Frame):
             pass
 
     def writeLoopVideoSetting(self):
-        if self.loopVideoSetting.get() != 0:
-            self.serialWrite("{SET: loopVideo=true}")
+        if self.ttvPort is not None:
+            if self.loopVideoSetting.get() != 0:
+                self.serialWrite("{SET: loopVideo=true}")
+            else:
+                self.serialWrite("{SET: loopVideo=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
         else:
-            self.serialWrite("{SET: loopVideo=false}")
+            self.loopVideoSetting.set(not self.loopVideoSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
+
+    def writeVolumeSetting(self, event):
+        if self.ttvPort is not None:
+            vol = int(self.volumeSliderVar.get() * 6 / 100 + 0.5)
+            self.volumeSliderVar.set(vol * 100 / 6)
+            self.serialWrite("{" + f"SET: volume={vol}" + "}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
+        elif self.volumeSlider["state"] == 'enabled':
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
+
+    def writeLiveVideoSetting(self):
+        if self.ttvPort is not None:
+            if self.liveVideoSetting.get() != 0:
+                self.serialWrite("{SET: liveVideo=true}")
+            else:
+                self.serialWrite("{SET: liveVideo=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
+        else:
+            self.liveVideoSetting.set(not self.liveVideoSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
+
+    def writeAlphabetizePlaybackSetting(self):
+        if self.ttvPort is not None:
+            if self.alphabetizePlaybackSetting.get() != 0:
+                self.serialWrite("{SET: alphabetize=true}")
+            else:
+                self.serialWrite("{SET: alphabetize=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
+        else:
+            self.alphabetizePlaybackSetting.set(not self.alphabetizePlaybackSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
+
+    def writeShowStaticSetting(self):
+        if self.ttvPort is not None:
+            if self.showStaticSetting.get() != 0:
+                self.serialWrite("{SET: static=true}")
+            else:
+                self.serialWrite("{SET: static=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
+        else:
+            self.showStaticSetting.set(not self.showStaticSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
+
+    def writeShowChannelNumberSetting(self):
+        if self.ttvPort is not None:
+            if self.showChannelNumberSetting.get() != 0:
+                self.serialWrite("{SET: showChannel=true}")
+            else:
+                self.serialWrite("{SET: showChannel=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
+        else:
+            self.showChannelNumberSetting.set(not self.showChannelNumberSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
+
+    def writeShowVolumeSetting(self):
+        if self.ttvPort is not None:
+            if self.showVolumeSetting.get() != 0:
+                self.serialWrite("{SET: showVolume=true}")
+            else:
+                self.serialWrite("{SET: showVolume=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
+        else:
+            self.showVolumeSetting.set(not self.showVolumeSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
 
     def writeRandomStartTimeSetting(self):
-        if self.randomStartTimeSetting.get() != 0:
-            self.serialWrite("{SET: randStartTime=true}")
+        if self.ttvPort is not None:
+            if self.randomStartTimeSetting.get() != 0:
+                self.serialWrite("{SET: randStartTime=true}")
+            else:
+                self.serialWrite("{SET: randStartTime=false}")
+            # for i in range(10):
+            #     line = self.ttvPort.ser.readline().decode("utf-8")
+            #     print(line)
         else:
-            self.serialWrite("{SET: randStartTime=false}")
+            self.randomStartTimeSetting.set(not self.randomStartTimeSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
 
     def writeRandomStartChannelSetting(self):
-        if self.randomStartChannelSetting.get() != 0:
-            self.serialWrite("{SET: randStartChan=true}")
+        if self.ttvPort is not None:
+            if self.randomStartChannelSetting.get() != 0:
+                self.serialWrite("{SET: randStartChan=true}")
+            else:
+                self.serialWrite("{SET: randStartChan=false}")
+            line = self.ttvPort.ser.readline().decode("utf-8")
+            print(line)
         else:
-            self.serialWrite("{SET: randStartChan=false}")
+            self.randomStartChannelSetting.set(not self.randomStartChannelSetting.get())
+            messagebox.showwarning("No TinyTV device!", "Please select a device.")
 
     def selectTTV(self):
         ports = [p for p in serial.tools.list_ports.comports() if p.hwid != "n/a"]
@@ -171,7 +273,6 @@ class TinyTVConverter(Frame):
             messagebox.showerror("No Devices", "No serial devices found.")
             return
 
-        # --- Tkinter Selection Window ---
         root = Tk()
         root.title("Select Serial Device")
 
@@ -180,7 +281,6 @@ class TinyTVConverter(Frame):
         listbox = Listbox(root, width=60, height=10)
         listbox.pack(padx=10, pady=5)
 
-        # Fill the listbox
         for p in ports:
             listbox.insert(END, f"{p.device}  |  {p.hwid}")
 
@@ -227,12 +327,55 @@ class TinyTVConverter(Frame):
                     self.randomStartChannelSetting.set(1 if line[p+1:-3] == "true" else 0)
                     break
 
+            self.serialWrite("{GET: liveVideo}")
+            for i in range(10):
+                line = self.ttvPort.ser.readline().decode("utf-8")
+                if("\"liveVideo\"" in line):
+                    p = line.index(":")
+                    print(line[p+1:-3])
+                    self.liveVideoSetting.set(1 if line[p+1:-3] == "true" else 0)
+                    break
+
+            self.serialWrite("{GET: alphabetize}")
+            for i in range(10):
+                line = self.ttvPort.ser.readline().decode("utf-8")
+                if("\"alphabetize\"" in line):
+                    p = line.index(":")
+                    print(line[p+1:-3])
+                    self.alphabetizePlaybackSetting.set(1 if line[p+1:-3] == "true" else 0)
+                    break
+
+            self.serialWrite("{GET: showVolume}")
+            for i in range(10):
+                line = self.ttvPort.ser.readline().decode("utf-8")
+                if("\"showVolume\"" in line):
+                    p = line.index(":")
+                    print(line[p+1:-3])
+                    self.showVolumeSetting.set(1 if line[p+1:-3] == "true" else 0)
+                    break
+
+            self.serialWrite("{GET: showChannel}")
+            for i in range(10):
+                line = self.ttvPort.ser.readline().decode("utf-8")
+                if("\"showChannel\"" in line):
+                    p = line.index(":")
+                    print(line[p+1:-3])
+                    self.showChannelNumberSetting.set(1 if line[p+1:-3] == "true" else 0)
+                    break
+
             self.serialWrite("{GET: volume}")
             for i in range(10):
                 line = self.ttvPort.ser.readline().decode("utf-8")
                 if("\"volume\"" in line):
                     print(line)
+                    p = line.index(":")
+                    self.volumeSliderVar.set(float(line[p+1:-3]) * 100 / 6)
                     break
+
+            self.setTVSettingsEnabled('enabled')
+
+            self.selectTTVButton.configure(text="Connected to TinyTV")
+            self.selectTTVButton.configure(state='disabled')
 
             root.destroy()
 
@@ -291,6 +434,17 @@ class TinyTVConverter(Frame):
             self.currentTheme = darkdetect.theme()
         self.after(500, self.darkDetectPollLoop)
 
+    def serialDisconnectPollLoop(self):
+        if(self.ttvPort is not None):
+            try:
+                test = self.ttvPort.ser.readline()
+            except SerialException:
+                self.ttvPort = None
+                self.setTVSettingsEnabled('disabled')
+                self.selectTTVButton.configure(text="Connect to TinyTV")
+                self.selectTTVButton.configure(state='enabled')
+        self.after(500, self.serialDisconnectPollLoop)
+
     def loadVideoThumbnailThreadDND(self):
         self.setVideoInfo(self.dndevent.data[1:-1] if self.dndevent.data[0] == '{' else self.dndevent.data)
         self.VideoOutputSettings.calculateVideoData()
@@ -319,17 +473,17 @@ class TinyTVConverter(Frame):
             def openPage():
                 webbrowser.open_new("https://tinytv.us/Update")
 
-            self.formatWarningLabel = Label(self, text="Requires new firmware!", foreground="red")
-            self.formatWarningLabel.grid(column=1,row=2,columnspan=1,sticky="sw", padx=10, pady=(56, 0))
-            self.formatWarningLabel2 = Label(self, text="tinytv.us/Update", foreground="blue", cursor="hand2")
+            self.formatWarningLabel = Label(self.notebookFrame1, text="Requires new firmware!", foreground="red")
+            self.formatWarningLabel.grid(column=1,row=3,columnspan=1,sticky="sw", padx=10, pady=(56, 0))
+            self.formatWarningLabel2 = Label(self.notebookFrame1, text="tinytv.us/Update", foreground="blue", cursor="hand2")
             self.formatWarningLabel2.bind("<Button-1>", lambda e: openPage())
-            self.formatWarningLabel2.grid(column=1,row=3,columnspan=1,sticky="sw", padx=10, pady=(0, 5))
+            self.formatWarningLabel2.grid(column=1,row=4,columnspan=1,sticky="sw", padx=10, pady=(0, 5))
 
+            self.checkboxFrameAudio.grid(column=1,row=5,columnspan=1,sticky="new", padx=5, pady=0)
+            self.videoInfoFrame.grid(column=1,row=6,columnspan=1,sticky="new", padx=5, pady=0)
+        else:
             self.checkboxFrameAudio.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
             self.videoInfoFrame.grid(column=1,row=5,columnspan=1,sticky="new", padx=5, pady=0)
-        else:
-            self.checkboxFrameAudio.grid(column=1,row=3,columnspan=1,sticky="new", padx=5, pady=0)
-            self.videoInfoFrame.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
         if(self.TVCombo.get() == "TinyTV DIY Kit" and self.FormatCombo.get() == ".MP4"):
             messagebox.showwarning("Unsupported format", ".MP4 not supported for TinyTV DIY Kit, setting to .AVI")
             self.FormatCombo.set(".AVI") # MP4 not supported for kit
@@ -342,6 +496,17 @@ class TinyTVConverter(Frame):
         self.displayVidData()
         self.FormatCombo.selection_clear()
 
+    def setTVSettingsEnabled(self, en):
+        self.volumeSlider.configure(state=en)
+        self.loopVideoSwitch.configure(state=en)
+        self.liveVideoSwitch.configure(state=en)
+        self.alphabetizeSwitch.configure(state=en)
+        self.showStaticSwitch.configure(state=en)
+        self.showChannelNumberSwitch.configure(state=en)
+        self.showVolumeSwitch.configure(state=en)
+        self.randomStartTimeSwitch.configure(state=en)
+        self.randomStartChannelSwitch.configure(state=en)
+
     def initUI(self):
 
         sv_ttk.set_theme(darkdetect.theme())
@@ -351,48 +516,54 @@ class TinyTVConverter(Frame):
             self.parent.title("TinyTV Converter - 1.1.0")
         self.pack(fill=BOTH, expand=1)
 
-        menubar = Menu(self.parent)
-        self.parent.config(menu=menubar)
+        self.notebook = Notebook(self)
+        self.notebookFrame1 = Frame(self.notebook, width=400, height=400)
+        self.notebookFrame2 = Frame(self.notebook, width=400, height=400)
 
-        FileOptionsMenu = Menu(menubar, tearoff=0)
+        # menubar = Menu(self.parent)
+        # self.parent.config(menu=menubar)
 
-        menubar.add_cascade(label="File", menu=FileOptionsMenu)
-        FileOptionsMenu.add_command(label="Open...", command=self.onOpen, accelerator="Ctrl+O")
-        FileOptionsMenu.add_command(label="Open Directory...", command=self.onOpenDirectory, accelerator="Ctrl+O")
-        FileOptionsMenu.add_command(label="Convert", command=self.onConvert)
-        FileOptionsMenu.add_separator()
-        FileOptionsMenu.add_command(label="Exit", command=self.onQuit, accelerator="Ctrl+Q")
+        # FileOptionsMenu = Menu(menubar, tearoff=0)
+
+        # menubar.add_cascade(label="File", menu=FileOptionsMenu)
+        # FileOptionsMenu.add_command(label="Open...", command=self.onOpen, accelerator="Ctrl+O")
+        # FileOptionsMenu.add_command(label="Open Directory...", command=self.onOpenDirectory, accelerator="Ctrl+O")
+        # FileOptionsMenu.add_command(label="Convert", command=self.onConvert)
+        # FileOptionsMenu.add_separator()
+        # FileOptionsMenu.add_command(label="Exit", command=self.onQuit, accelerator="Ctrl+Q")
 
 
-        TVOptionsMenu = Menu(menubar, tearoff=0)
-        TVOptionsMenu.add_radiobutton(label="TinyTV 2", command=self.displayVidData, var=self.VideoOutputSettings.TVTypeOption, value=3)
-        TVOptionsMenu.add_radiobutton(label="TinyTV Mini",  command=self.displayVidData, var=self.VideoOutputSettings.TVTypeOption, value=2)
-        TVOptionsMenu.add_radiobutton(label="TinyTV DIY Kit",  command=self.displayVidData, var=self.VideoOutputSettings.TVTypeOption, value=1)
-
-        menubar.add_cascade(label="Video Options", menu=TVOptionsMenu)
+        # TVOptionsMenu = Menu(menubar, tearoff=0)
+        # TVOptionsMenu.add_radiobutton(label="TinyTV 2", command=self.displayVidData, var=self.VideoOutputSettings.TVTypeOption, value=3)
+        # TVOptionsMenu.add_radiobutton(label="TinyTV Mini",  command=self.displayVidData, var=self.VideoOutputSettings.TVTypeOption, value=2)
+        # TVOptionsMenu.add_radiobutton(label="TinyTV DIY Kit",  command=self.displayVidData, var=self.VideoOutputSettings.TVTypeOption, value=1)
+        #
+        # menubar.add_cascade(label="Video Options", menu=TVOptionsMenu)
 
         def updateAndDisplay():
             self.initVideoData()
             self.displayVidData()
 
-        OutputFormatMenu = Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Output Format", menu=OutputFormatMenu)
+        # OutputFormatMenu = Menu(menubar, tearoff=0)
+        # menubar.add_cascade(label="Output Format", menu=OutputFormatMenu)
+        #
+        # OutputFormatMenu.add_radiobutton(label=".AVI (Default, recommended)", command=updateAndDisplay, var=self.VideoOutputSettings.outputFormat, value=1)
+        # OutputFormatMenu.add_radiobutton(label=".TSV (For original TinyTV Kit firmware, enormous file size!)",  command=updateAndDisplay, var=self.VideoOutputSettings.outputFormat, value=2)
+        # OutputFormatMenu.add_radiobutton(label=".MP4 (For original TinyTV 2 and Mini firmware)",  command=updateAndDisplay, var=self.VideoOutputSettings.outputFormat, value=3)
+        # OutputFormatMenu.add_separator()
+        # OutputFormatMenu.add_command(label="Import Format Settings...", command = self.onOpenFormatSettings)
+        # OutputFormatMenu.add_command(label="Export Format Settings...", command = self.onExportFormatSettings)
 
-        OutputFormatMenu.add_radiobutton(label=".AVI (Default, recommended)", command=updateAndDisplay, var=self.VideoOutputSettings.outputFormat, value=1)
-        OutputFormatMenu.add_radiobutton(label=".TSV (For original TinyTV Kit firmware, enormous file size!)",  command=updateAndDisplay, var=self.VideoOutputSettings.outputFormat, value=2)
-        OutputFormatMenu.add_radiobutton(label=".MP4 (For original TinyTV 2 and Mini firmware)",  command=updateAndDisplay, var=self.VideoOutputSettings.outputFormat, value=3)
-        OutputFormatMenu.add_separator()
-        OutputFormatMenu.add_command(label="Import Format Settings...", command = self.onOpenFormatSettings)
-        OutputFormatMenu.add_command(label="Export Format Settings...", command = self.onExportFormatSettings)
-
-        TVSettingsMenu = Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="TinyTV Settings", menu=TVSettingsMenu)
-
-        TVSettingsMenu.add_checkbutton(label="Loop Video", command=self.writeLoopVideoSetting, var=self.loopVideoSetting)
-        TVSettingsMenu.add_checkbutton(label="Random Start Time", command=self.writeRandomStartTimeSetting, var=self.randomStartTimeSetting)
-        TVSettingsMenu.add_checkbutton(label="Random Start Channel", command=self.writeRandomStartChannelSetting, var=self.randomStartChannelSetting)
-        TVSettingsMenu.add_separator()
-        TVSettingsMenu.add_command(label="Select TinyTV...", command=self.selectTTV)#self.selectTTVButton = Button(self.TVConvertFrame, text='Select TinyTV', command=self.selectTTV)
+        # TVSettingsMenu = Menu(menubar, tearoff=0)
+        # menubar.add_cascade(label="TinyTV Settings", menu=TVSettingsMenu)
+        #
+        # TVSettingsMenu.add_checkbutton(label="Loop Video", command=self.writeLoopVideoSetting, var=self.loopVideoSetting)
+        # TVSettingsMenu.add_checkbutton(label="Random Start Time", command=self.writeRandomStartTimeSetting, var=self.randomStartTimeSetting)
+        # TVSettingsMenu.add_checkbutton(label="Random Start Channel", command=self.writeRandomStartChannelSetting, var=self.randomStartChannelSetting)
+        # TVSettingsMenu.add_separator()
+        # TVSettingsMenu.add_command(label="Select TinyTV...", command=self.selectTTV)
+        # TVSettingsMenu.add_command(label="Import Settings...", command=self.onOpenFormatSettings)
+        # TVSettingsMenu.add_command(label="Export Settings...", command=self.onExportFormatSettings)
 
         self.parent.bind("<Button-1>", self.click)
 
@@ -408,22 +579,21 @@ class TinyTVConverter(Frame):
 
         self.parent.protocol("WM_DELETE_WINDOW", self.onWindowClose)
 
-        Grid.columnconfigure(self, 0, weight=0)
-        Grid.columnconfigure(self, 1, weight=0, minsize=0)
-        Grid.columnconfigure(self, 2, weight=0, minsize=0)
+        # Grid.columnconfigure(self.notebookFrame1, 0, weight=0)
+        # Grid.columnconfigure(self.notebookFrame1, 1, weight=0, minsize=0)
+        # Grid.columnconfigure(self.notebookFrame1, 2, weight=0, minsize=0)
 
-        Grid.columnconfigure(self, 1, weight=1)
-        Grid.columnconfigure(self, 2, weight=1)
-        Grid.columnconfigure(self, 3, weight=0,minsize=0)
+        Grid.columnconfigure(self.notebookFrame1, 1, weight=1)
+        Grid.columnconfigure(self.notebookFrame1, 2, weight=1)
+        Grid.columnconfigure(self.notebookFrame1, 3, weight=0,minsize=0)
 
-        Grid.rowconfigure(self, 10, weight=1)
+        Grid.rowconfigure(self.notebookFrame1, 10, weight=1)
 
         canvasBG = 'white'
         if sys.platform=='darwin' :
             canvasBG = '#737373'
 
-        self.PreviewFrame = Frame(self, width = self.VideoOutputSettings.outputWidth*2, height = self.VideoOutputSettings.outputHeight*2)
-        self.PreviewFrame.grid(column=0, row=2, rowspan=4, padx=(4,0), pady=5,  sticky='nsew')
+        self.PreviewFrame = Frame(self.notebookFrame1, width = self.VideoOutputSettings.outputWidth*2, height = self.VideoOutputSettings.outputHeight*2)
         self.PreviewFrame.grid_propagate(0)
 
         def OnVideoFileDrop(event):
@@ -484,7 +654,7 @@ class TinyTVConverter(Frame):
 
         self.ListScrollbar.config(command=self.PreviewListbox.yview)
 
-        self.openFileFrame = Frame(self)
+        self.openFileFrame = Frame(self.notebookFrame1)
 
         self.openButtonsFrame = LabelFrame(self.openFileFrame, text = 'Open...')
 
@@ -556,7 +726,7 @@ class TinyTVConverter(Frame):
 
         self.ScalingCombo.bind("<<ComboboxSelected>>", OnScalingTypeChange)
 
-        self.convertFormatFrame = LabelFrame(self, text = 'Output Format')
+        self.convertFormatFrame = LabelFrame(self.notebookFrame1, text = 'Output Format')
 
         self.formatTypes = {
             ".AVI": 1,
@@ -576,16 +746,16 @@ class TinyTVConverter(Frame):
 
         self.FormatCombo.bind("<<ComboboxSelected>>", self.OnOutputFormatChange)
 
-        self.checkboxFrameAudio = LabelFrame(self, text = 'Audio Options')
+        self.checkboxFrameAudio = LabelFrame(self.notebookFrame1, text = 'Audio Options')
         self.audioCheckBox = Checkbutton(self.checkboxFrameAudio, text='Normalize', variable = self.VideoOutputSettings.normalizeAudio)
         self.audioCheckBox.pack(side='left', pady=(4,2), padx=(2,2))
 
-        self.videoInfoFrame = LabelFrame(self, text = 'Video Info')
+        self.videoInfoFrame = LabelFrame(self.notebookFrame1, text = 'Video Info')
 
-        self.TVConvertFrame = LabelFrame(self, text = 'Convert...')
+        self.TVConvertFrame = LabelFrame(self.notebookFrame1, text = 'Convert...')
 
-        self.menuBarFrame = Frame(self)
-        self.menuBarStyle = Style(self)
+        self.menuBarFrame = Frame(self.notebookFrame1)
+        self.menuBarStyle = Style(self.notebookFrame1)
 
         self.menuBarStyle.configure("MenuBarButton.TButton", font=("Arial", 10), relief='flat', anchor="w", borderwidth=0, padding=0)
 
@@ -607,68 +777,166 @@ class TinyTVConverter(Frame):
         self.OutputFormatMenuBarButton.configure(command = showOutputFormatMenu, style="MenuBarButton.TButton")
         self.OutputFormatMenuBarButton.grid(row=0, column=2, columnspan=1, padx=(0, 0), pady=(0, 2), sticky='w')
 
-        self.TVSettingsMenuBarButton = Button(self.menuBarFrame, text='TinyTV Settings', takefocus=0, width=15)
-        def showTVSettingsMenu():
-            TVSettingsMenu.tk_popup(self.TVSettingsMenuBarButton.winfo_rootx(), self.TVSettingsMenuBarButton.winfo_rooty()+24)
-        self.TVSettingsMenuBarButton.configure(command = showTVSettingsMenu, style="MenuBarButton.TButton")
-        self.TVSettingsMenuBarButton.grid(row=0, column=3, columnspan=1, padx=(0, 2), pady=(0, 2), sticky='w')
+        #self.TVSettingsMenuBarButton = Button(self.menuBarFrame, text='TinyTV Settings', takefocus=0, width=15)
+        self.TVSettingsMenuBarButton = Button(self.TVConvertFrame, text='TinyTV Settings', takefocus=0, width=12)
 
-        self.openFileFrame.grid(column=0,row=1,columnspan=2, sticky="we", padx=(5, 4), pady=(0,0))
+        def showTVSettingsMenu():
+            TVSettingsMenu.tk_popup(self.TVSettingsButton.winfo_rootx(), self.TVSettingsButton.winfo_rooty()+24)
+        self.TVSettingsMenuBarButton.configure(command = showTVSettingsMenu, style="MenuBarButton.TButton")
+        #self.TVSettingsMenuBarButton.grid(row=6, column=0, columnspan=1, padx=(5, 2), pady=(0, 2), sticky='nsew')
+
+        # firstRowButton = Button(self, text='Test', takefocus=0, width=15)
+        # firstRowButton.grid(column=0,row=1)
 
         self.openButtonsFrame.grid(column=0,row=2,columnspan=2, sticky="we", padx=(0, 0), pady=(0,0))
         self.radioFrameTVType.grid(column=2,row=2,columnspan=1,sticky="s", padx=(4, 2), pady=(0, 0))
         self.radioFrameVid.grid(column=3,row=2,columnspan=1,sticky="ne", padx=(2, 2), pady=0)
 
-        self.convertFileButton = Button(self.TVConvertFrame, text='Convert Video', width=14, style = "Accent.TButton", command=self.onConvert)
+        self.convertFileButton = Button(self.TVConvertFrame, text='Convert Video', width=11, style = "Accent.TButton", command=self.onConvert)
         self.convertFileButton.pack(side='left', pady=(5,4), padx=(4,4))
-        self.cancelButton = Button(self.TVConvertFrame, text='Cancel', width=8, command=self.onCancelConvert)
+        self.cancelButton = Button(self.TVConvertFrame, text='Cancel', width=6, command=self.onCancelConvert)
         self.cancelButton.pack(side='left', pady=(5,4), padx=(0,4))
 
         self.openHelpButton = Button(self.TVConvertFrame, text='Help', width=4, style = "Accent.TButton", command=self.onOpenHelpFile)
         self.openHelpButton.pack(side='right', pady=(5,4), padx=(0,4))
 
-        self.exportSettingsButton = Button(self.TVConvertFrame, text='Export Settings', width=12, command=self.onExportFormatSettings)
-        self.exportSettingsButton.pack(side='right', pady=(5,4), padx=(0,4))
+        #self.TVSettingsMenuBarButton.pack(side='right', pady=(5,4), padx=(0,4))
+
+        # self.TVSettingsButton = Button(self.TVConvertFrame, text='TinyTV Settings', width=12, command=showTVSettingsMenu)
+        # self.TVSettingsButton.pack(side='right', pady=(5,4), padx=(0,4))
+        self.importSettingsButton = Button(self.TVConvertFrame, text='Export Settings', width=12, command=self.onExportFormatSettings)
+        self.importSettingsButton.pack(side='right', pady=(5,4), padx=(0,4))
         self.importSettingsButton = Button(self.TVConvertFrame, text='Import Settings', width=12, command=self.onOpenFormatSettings)
         self.importSettingsButton.pack(side='right', pady=(5,4), padx=(0,4))
 
+        self.progressbar = Progressbar(self.notebookFrame1, variable=self.progressBarVar, maximum=100)
         self.durationStringLabel = Label(self.videoInfoFrame, text="Video Length:")
-        self.durationStringLabel.grid(column=1,row=0, sticky=W, padx=5, pady=(5, 0))
         self.durationStringField = Label(self.videoInfoFrame)
+        self.outputSizeField = Label(self.videoInfoFrame)
+        self.outputSizeLabel = Label(self.videoInfoFrame, text="Output Size:")
+        self.audioBoostStringLabel = Label(self.checkboxFrameAudio, text="-- dB")
+        self.formatWarningLabel = Label(self.notebookFrame1, text="Requires new firmware!", foreground="red")
+        self.formatWarningLabel2 = Label(self.notebookFrame1, text="tinytv.us/Update", foreground="red")
+
+        # self.durationStringLabel.grid(column=1,row=0, sticky=W, padx=5, pady=(5, 0))
+        # self.durationStringField.grid(column=1,row=1, sticky=W, padx=(5, 5), pady=5)
+        #
+        # self.outputSizeLabel = Label(self.videoInfoFrame, text="Output Size:")
+        # self.outputSizeLabel.grid(column=1,row=2, sticky=W, padx=5, pady=(5, 0))
+        #
+        # self.outputSizeField = Label(self.videoInfoFrame)
+        # self.outputSizeField.grid(column=1,row=3, sticky=W, padx=(5, 5), pady=5)
+        #
+        # self.audioBoostStringLabel = Label(self.checkboxFrameAudio, text="-- dB")
+        # self.audioBoostStringLabel.pack(side='right',pady=(4,2), padx=(0,8))
+        #
+        # self.convertFormatFrame.grid(column=1,row=3,columnspan=1,sticky="new", padx=5, pady=0)
+        #
+        # self.formatWarningLabel = Label(self, text="Requires new firmware!", foreground="red")
+        # self.formatWarningLabel2 = Label(self, text="tinytv.us/Update", foreground="red")
+        #
+        # self.checkboxFrameAudio.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
+        # self.videoInfoFrame.grid(column=1,row=5,columnspan=1,sticky="new", padx=5, pady=0)
+        #
+        # self.TVConvertFrame.grid(column=0,row=9,columnspan=2,sticky="new", padx=5, pady=(0, 3))
+        #
+        # #self.progressBarStyle = Style(self.progressbar)
+        # #self.progressBarStyle.configure("Custom.Horizontal.TProgressbar", thickness=8)
+        # self.progressbar.grid(column=0,row=10,columnspan=2, rowspan=1, sticky='nsew', padx=(5, 5), pady=(0,3))
+
+        self.openFileFrame.grid(column=0,row=2,columnspan=2, sticky="we", padx=(5, 4), pady=(0,0))
+        #self.PreviewFrame = Frame(self, width = self.VideoOutputSettings.outputWidth*2, height = self.VideoOutputSettings.outputHeight*2)
+        self.PreviewFrame.grid(column=0, row=3, rowspan=4, padx=(4,0), pady=5,  sticky='nsew')
+        self.durationStringLabel.grid(column=1,row=0, sticky=W, padx=5, pady=(5, 0))
         self.durationStringField.grid(column=1,row=1, sticky=W, padx=(5, 5), pady=5)
 
-        self.outputSizeLabel = Label(self.videoInfoFrame, text="Output Size:")
         self.outputSizeLabel.grid(column=1,row=2, sticky=W, padx=5, pady=(5, 0))
 
-        self.outputSizeField = Label(self.videoInfoFrame)
+
         self.outputSizeField.grid(column=1,row=3, sticky=W, padx=(5, 5), pady=5)
 
-        self.audioBoostStringLabel = Label(self.checkboxFrameAudio, text="-- dB")
+
         self.audioBoostStringLabel.pack(side='right',pady=(4,2), padx=(0,8))
 
-        self.convertFormatFrame.grid(column=1,row=2,columnspan=1,sticky="new", padx=5, pady=0)
+        self.convertFormatFrame.grid(column=1,row=3,columnspan=1,sticky="new", padx=5, pady=0)
 
-        self.formatWarningLabel = Label(self, text="Requires new firmware!", foreground="red")
-        self.formatWarningLabel2 = Label(self, text="tinytv.us/Update", foreground="red")
-
-        self.checkboxFrameAudio.grid(column=1,row=3,columnspan=1,sticky="new", padx=5, pady=0)
-        self.videoInfoFrame.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
+        self.checkboxFrameAudio.grid(column=1,row=4,columnspan=1,sticky="new", padx=5, pady=0)
+        self.videoInfoFrame.grid(column=1,row=5,columnspan=1,sticky="new", padx=5, pady=0)
 
         self.TVConvertFrame.grid(column=0,row=9,columnspan=2,sticky="new", padx=5, pady=(0, 3))
-
-        self.progressbar = Progressbar(self, variable=self.progressBarVar, maximum=100)
 
         #self.progressBarStyle = Style(self.progressbar)
         #self.progressBarStyle.configure("Custom.Horizontal.TProgressbar", thickness=8)
         self.progressbar.grid(column=0,row=10,columnspan=2, rowspan=1, sticky='nsew', padx=(5, 5), pady=(0,3))
+
+        self.onThemeChanged(darkdetect.theme())
+
+        self.displayVidData()
+
+        self.volumeSliderVar = DoubleVar()
+
+        #sliderSwitch = Checkbutton(self.notebookFrame2, text='Switch', style='Switch.TCheckbutton')
+        settingOptionsFrame = Frame(self.notebookFrame2)
+        volumeLabelFrame = LabelFrame(settingOptionsFrame, text = 'Volume')
+        self.volumeSlider = Scale(volumeLabelFrame, to=100, orient="horizontal", takefocus=False, variable=self.volumeSliderVar)
+        self.loopVideoSwitch = Checkbutton(settingOptionsFrame, text='Loop Video', style='Switch.TCheckbutton', command = self.writeLoopVideoSetting, var=self.loopVideoSetting)
+        self.liveVideoSwitch = Checkbutton(settingOptionsFrame, text='Live Video', style='Switch.TCheckbutton', command = self.writeLiveVideoSetting, var=self.liveVideoSetting)
+        self.alphabetizeSwitch = Checkbutton(settingOptionsFrame, text='Alphabetize Playback', style='Switch.TCheckbutton', command = self.writeAlphabetizePlaybackSetting, var=self.alphabetizePlaybackSetting)
+        self.showStaticSwitch = Checkbutton(settingOptionsFrame, text='Static Effect', style='Switch.TCheckbutton', command = self.writeShowStaticSetting, var=self.showStaticSetting)
+        self.showChannelNumberSwitch = Checkbutton(settingOptionsFrame, text='Show Channel Number', style='Switch.TCheckbutton', command = self.writeShowChannelNumberSetting, var=self.showChannelNumberSetting)
+        self.showVolumeSwitch = Checkbutton(settingOptionsFrame, text='Show Volume', style='Switch.TCheckbutton', command = self.writeShowVolumeSetting, var=self.showVolumeSetting)
+        self.randomStartTimeSwitch = Checkbutton(settingOptionsFrame, text='Random Start Time', style='Switch.TCheckbutton', command = self.writeRandomStartTimeSetting, var=self.randomStartTimeSetting)
+        self.randomStartChannelSwitch = Checkbutton(settingOptionsFrame, text='Random Start Channel', style='Switch.TCheckbutton', command = self.writeRandomStartChannelSetting, var=self.randomStartChannelSetting)
+        self.selectTTVButton = Button(settingOptionsFrame, text="Connect to TinyTV", command=self.selectTTV, width=20)
+
+        self.volumeSlider.bind("<ButtonRelease-1>", self.writeVolumeSetting)
+        # importSettingsButton = Button(settingOptionsFrame, text="Import Settings...", command=self.onOpenFormatSettings, width=20)
+        # exportSettingsButton = Button(settingOptionsFrame, text="Export Settings...", command=self.onExportFormatSettings, width=20)
+                # TVSettingsMenu.add_checkbutton(label="Loop Video", command=self.writeLoopVideoSetting, var=self.loopVideoSetting)
+                # TVSettingsMenu.add_checkbutton(label="Random Start Time", command=self.writeRandomStartTimeSetting, var=self.randomStartTimeSetting)
+                # TVSettingsMenu.add_checkbutton(label="Random Start Channel", command=self.writeRandomStartChannelSetting, var=self.randomStartChannelSetting)
+                # TVSettingsMenu.add_separator()
+                # TVSettingsMenu.add_command(label="Select TinyTV...", command=self.selectTTV)
+                # TVSettingsMenu.add_command(label="Import Settings...", command=self.onOpenFormatSettings)
+                # TVSettingsMenu.add_command(label="Export Settings...", command=self.onExportFormatSettings)
+        self.setTVSettingsEnabled('disabled')
+        # loopVideoSwitch.grid(row=1, column=2, sticky="we")
+        # randomStartTimeSwitch.grid(row=2, column=2, sticky="we")
+        # randomStartChannelSwitch.grid(row=3, column=2, sticky="we")
+        # selectTTVButton.grid(row=4, column=2, sticky="we")
+        # importSettingsButton.grid(row=5, column=2, sticky="we")
+        # exportSettingsButton.grid(row=6, column=2, sticky="we")
+
+        settingOptionsFrame.pack(expand=True)
+        self.loopVideoSwitch.grid(row=1, column=2, sticky="we")
+        self.liveVideoSwitch.grid(row=2, column=2, sticky="we")
+        self.alphabetizeSwitch.grid(row=3, column=2, sticky="we")
+        self.showStaticSwitch.grid(row=4, column=2, sticky="we")
+        self.showChannelNumberSwitch.grid(row=5, column=2, sticky="we")
+        self.showVolumeSwitch.grid(row=6, column=2, sticky="we")
+        self.randomStartTimeSwitch.grid(row=7, column=2, sticky="we")
+        self.randomStartChannelSwitch.grid(row=8, column=2, sticky="we")
+        volumeLabelFrame.grid(row=9, column=2, sticky="we")
+        self.volumeSlider.pack(expand=True, fill='both', padx=(5, 5), pady=(0,3))
+        self.selectTTVButton.grid(row=1, column=2, sticky="we")
+        # importSettingsButton.grid(row=5, column=2, sticky="we")
+        # exportSettingsButton.grid(row=6, column=2, sticky="we")
+
+        self.notebook.grid(row=1, column=1)
+
+        self.notebookFrame1.pack(fill='both', expand=True)
+        self.notebookFrame2.pack(fill='both', expand=True)
+
+        self.notebook.add(self.notebookFrame1, text="Video Converter")
+        self.notebook.add(self.notebookFrame2, text="TV Settings")
 
         openFileButtonTip = CreateToolTip(self.openFileButton, 'Open a video file or GIF')
         TVComboTip = CreateToolTip(self.TVCombo, 'Select TinyTV type')
         scalingComboTip = CreateToolTip(self.ScalingCombo, 'Select scale and crop options')
         formatComboTip = CreateToolTip(self.FormatCombo, 'Select output format')
         normalizeAudioTip = CreateToolTip(self.audioCheckBox, 'Normalize per-video audio levels')
-        importSettingsTip = CreateToolTip(self.importSettingsButton, 'Load previously saved configuration')
-        exportSettingsTip = CreateToolTip(self.exportSettingsButton, 'Export current configuration')
+        #importSettingsTip = CreateToolTip(self.importSettingsButton, 'Load previously saved configuration')
+        #exportSettingsTip = CreateToolTip(self.TVSettingsButton, 'Export current configuration')
         helpButtonTip = CreateToolTip(self.openHelpButton, 'View manual')
         cancelButtonTip = CreateToolTip(self.cancelButton, 'Stop current video conversion')
         # radButtonTinyTV2Tip = CreateToolTip(self.radButtonTV2, 'Convert video for TinyTV 2')
@@ -678,13 +946,14 @@ class TinyTVConverter(Frame):
         # radButton2Tip = CreateToolTip(self.radButton2, 'Keep aspect ratio and crop to fit TinyTV')
         # radButton1Tip = CreateToolTip(self.radButton1, 'Stretch video to fit TinyTV')
         convertFileButtonTip = CreateToolTip(self.convertFileButton, 'Start video conversion')
-        # selectTTVButtonTip = CreateToolTip(self.selectTTVButton, 'Select TinyTV device port')
+        selectTTVButtonTip = CreateToolTip(self.selectTTVButton, 'Connect to TinyTV device port')
         openDirectoryButtonTip = CreateToolTip(self.openDirectoryButton, 'Open directory for video conversion(s)')
 
         self.currentTheme = None
         self.darkDetectPollLoop()
+        self.serialDisconnectPollLoop()
 
-        self.displayVidData()
+        # self.displayVidData()
 
 
 
