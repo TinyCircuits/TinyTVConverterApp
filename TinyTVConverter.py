@@ -260,8 +260,8 @@ class TinyTVConverter(Frame):
                 self.serialWrite("{SET: randStartChan=true}")
             else:
                 self.serialWrite("{SET: randStartChan=false}")
-            line = self.ttvPort.ser.readline().decode("utf-8")
-            print(line)
+            #line = self.ttvPort.ser.readline().decode("utf-8")
+            #print(line)
         else:
             self.randomStartChannelSetting.set(not self.randomStartChannelSetting.get())
             messagebox.showwarning("No TinyTV device!", "Please select a device.")
@@ -1196,7 +1196,12 @@ class TinyTVConverter(Frame):
             self.vidPipe.terminate()
             self.vidPipe.stdout.close()
             self.vidPipe.wait()
+        if(self.ttvPort is not None):
+            print("TV disconnected!")
+            self.ttvPort.disconnect()
         self.quit()
+        #self.onQuit()
+        exit()
 
     def onCancelConvert(self):
         if(self.vidPipe is not None):
