@@ -792,7 +792,7 @@ class TinyTVConverter(Frame):
         self.radioFrameTVType.grid(column=2,row=2,columnspan=1,sticky="s", padx=(4, 2), pady=(0, 0))
         self.radioFrameVid.grid(column=3,row=2,columnspan=1,sticky="ne", padx=(2, 2), pady=0)
 
-        self.convertFileButton = Button(self.TVConvertFrame, text='Convert Video', width=11, style = "Accent.TButton", command=self.onConvert)
+        self.convertFileButton = Button(self.TVConvertFrame, text='Convert Video', width=14, style = "Accent.TButton", command=self.onConvert)
         self.convertFileButton.pack(side='left', pady=(5,4), padx=(4,4))
         self.cancelButton = Button(self.TVConvertFrame, text='Cancel', width=6, command=self.onCancelConvert)
         self.cancelButton.pack(side='left', pady=(5,4), padx=(0,4))
